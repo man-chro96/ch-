@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ch@</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./styles/styles.css">
+</head>
+<body>
+   <div class="center-container">
+      <h1 class="centered-heading">Ch@</h1>
+   </div>
+   <div class="banner" id="banner">Messages start from: </div>
+   <div class="chat-container">
+      <ul id="messages" class="chat-messages"></ul>
+      <div class="input-container">
+         <input id="input" autocomplete="off" placeholder="Type your message...">
+         <button id="send-button">Send</button>
+      </div>
+      <div class="icon-selection">
+         <i class="fas fa-smile" data-icon="smile"></i>
+         <i class="fas fa-heart" data-icon="heart"></i>
+         <i class="fas fa-thumbs-up" data-icon="thumbs-up"></i>
+        </div>
+        <img src="./assets/gear.png" class="settings" alt="Settings">
+   </div>
+   <button class="avatar-button">Avatar</button>
+    <div class="avatar-container">
+   <div class="user-avatar-selection">
+      <img src="./assets/avatars/sanji.png" alt="Avatar 2" data-avatar="./assets/avatars/sanji.png">
+      <img src="./assets/avatars/zoro.png" alt="Avatar 3" data-avatar="./assets/avatars/zoro.png">
+      <img src="./assets/avatars/at.jpg" alt="At Logo" data-avatar="./assets/avatars/at.jpg">
+   </div>
+   </div>
+</div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    const socket = io();
+
+    const username = prompt('Please enter your username:');
+    socket.emit('setUsername', username);
+
+    let userAvatar = './assets/avatars/at.jpg'; // Default user avatar
+
+    $('.user-avatar-selection img').click(function () {
+      userAvatar = $(this).data('avatar');
+      console.log("useravatar");
+      console.log(userAvatar);
+    });
+
+    $('#form').submit(function () {
+      const rawMessage = $('#input').val();
+      const messageWithAvatarAndUsername = addAvatarAndUsername(rawMessage, userAvatar, 'You');
+      socket.emit('chat message', messageWithAvatarAndUsername);
+      $('#input').val('');
+      return false;
+    });
+
+    function addAvatarAndUsername(message, avatar, username) {
+      const avatarHtml = `<img src="${avatar}" class="user-avatar" alt="User Avatar">`;
+      return `${avatarHtml} ${username}: ${message}`;
+    }
+
+    $('.avatar-button').click(function () {
+      $('.avatar-container').toggleClass('active');
+    });
+
+    const iconMappings = {
+      smile: '😄',
+      heart: '❤️',
+      'thumbs-up': '👍'
+    };
+
+    $('.icon-selection i').click(function () {
+      const selectedIcon = $(this).data('icon');
+      const currentMessage = $('#input').val();
+      $('#input').val(`${currentMessage}${iconMappings[selectedIcon].replace(/:/g,'')}`);
+    });
+
+    // $('.icon-selection i').click(function () {
+    //   const selectedIcon = $(this).attr('class').split(' ')[1].split('-')[2];
+    //   const iconUnicode = iconMappings[selectedIcon];
+    //   const currentMessage = $('#input').val();
+    //   $('#input').val(`${currentMessage}${iconUnicode} `);
+    // });
+
+    $('#input').on('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent the default behavior of Enter (e.g., line break)
+        const message = $('#input').val();
+        if (message.trim() !== '') { // Only send non-empty messages
+          socket.emit('chat message', message);
+          $('#input').val('');
+        }
+      }
+    });
+
+    socket.on('setStartTimestamp', function (startTimestamp) {
+      const banner = document.getElementById('banner');
+      const formattedStartTimestamp = new Date(startTimestamp).toLocaleTimeString();
+      banner.textContent = `Messages start from: ${formattedStartTimestamp}`;
+      });
+
+    socket.on('chat message', function (msg) {
+      const message = msg.message;
+      const username = msg.username;
+      const timestamp = msg.timestamp;
+      const avatarHtml = `<img src="${userAvatar}" class="user-avatar" alt="User Avatar">`;
+      const formattedMessage = `<span class="timestamp">${timestamp}</span>` + avatarHtml +`<span class="username">${username}</span>: ${message}`;
+      const li = $('<li>').addClass('message').addClass(username === socket.username ? 'own-message' : 'user-message').html(formattedMessage);
+      $('#messages').append(li);
+    });
+
+    // $('#send-button').click(function () {
+    //   socket.emit('chat message', $('#input').val());
+    //   $('#input').val('');
+    // });
+
+    $('#send-button').click(function () {
+      const message = $('#input').val();
+      if (message.trim() !== '') {
+        socket.emit('chat message', message);
+        $('#input').val('');
+      }
+    });
+  </script>
+</body>
+</html>
