@@ -18,20 +18,16 @@
          <input id="input" autocomplete="off" placeholder="Type your message...">
          <button id="send-button">Send</button>
       </div>
-      <div class="icon-selection">
-         <i class="fas fa-smile" data-icon="smile"></i>
-         <i class="fas fa-heart" data-icon="heart"></i>
-         <i class="fas fa-thumbs-up" data-icon="thumbs-up"></i>
-        </div>
-        <img src="./assets/gear.png" class="settings" alt="Settings">
    </div>
-   <button class="avatar-button">Avatar</button>
-    <div class="avatar-container">
-   <div class="user-avatar-selection">
-      <img src="./assets/avatars/sanji.png" alt="Avatar 2" data-avatar="./assets/avatars/sanji.png">
-      <img src="./assets/avatars/zoro.png" alt="Avatar 3" data-avatar="./assets/avatars/zoro.png">
-      <img src="./assets/avatars/at.jpg" alt="At Logo" data-avatar="./assets/avatars/at.jpg">
-   </div>
+    <div class="settings-container">
+    <button class="avatar-button">Avatar</button>
+      <div class="avatar-container">
+      <div class="user-avatar-selection">
+          <img src="./assets/avatars/sanji.png" alt="Avatar 2" data-avatar="./assets/avatars/sanji.png">
+          <img src="./assets/avatars/zoro.png" alt="Avatar 3" data-avatar="./assets/avatars/zoro.png">
+          <img src="./assets/avatars/at.jpg" alt="At Logo" data-avatar="./assets/avatars/at.jpg">
+      </div>
+    </div>
    </div>
 </div>
 
@@ -68,6 +64,26 @@
       $('.avatar-container').toggleClass('active');
     });
 
+    
+    const icons = [
+      { class: 'fas fa-smile', data: 'smile' },
+      { class: 'fas fa-heart', data: 'heart' },
+      { class: 'fas fa-thumbs-up', data: 'thumbs-up' }
+    ];
+    
+    const iconSelectionDiv = $('<div class="icon-selection">');
+      const settingsIcon = `<img src="./assets/gear.png" class="settings" alt="Settings">`;
+      icons.forEach(icon => {
+        const iconElement = $('<i>').addClass(icon.class).attr('data-icon', icon.data);
+          iconSelectionDiv.append(iconElement);
+        });
+        
+    $('.chat-container').append(iconSelectionDiv);
+    $('.chat-container').append(settingsIcon);
+    $('.settings').click(function () {
+      $('.settings-container').toggleClass('active');
+    });
+
     const iconMappings = {
       smile: '😄',
       heart: '❤️',
@@ -79,13 +95,6 @@
       const currentMessage = $('#input').val();
       $('#input').val(`${currentMessage}${iconMappings[selectedIcon].replace(/:/g,'')}`);
     });
-
-    // $('.icon-selection i').click(function () {
-    //   const selectedIcon = $(this).attr('class').split(' ')[1].split('-')[2];
-    //   const iconUnicode = iconMappings[selectedIcon];
-    //   const currentMessage = $('#input').val();
-    //   $('#input').val(`${currentMessage}${iconUnicode} `);
-    // });
 
     $('#input').on('keydown', function (event) {
       if (event.key === 'Enter') {
@@ -113,11 +122,6 @@
       const li = $('<li>').addClass('message').addClass(username === socket.username ? 'own-message' : 'user-message').html(formattedMessage);
       $('#messages').append(li);
     });
-
-    // $('#send-button').click(function () {
-    //   socket.emit('chat message', $('#input').val());
-    //   $('#input').val('');
-    // });
 
     $('#send-button').click(function () {
       const message = $('#input').val();
